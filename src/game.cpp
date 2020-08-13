@@ -8,8 +8,8 @@
 #include <std/Windows/Position.tpp>
 #include <std/Windows/Controller.tpp>
 #include <std/Windows/Input.tpp>
-#include <std/Windows/visualizeEntity.tpp>
-#include <std/Windows/displacementEntity.tpp>
+#include <std/Windows/systemVisualizeEntity.tpp>
+#include <std/Windows/systemDisplacementEntity.tpp>
 #include <std/Windows/systemGenericCollition.tpp>
 #include <std/Windows/systemKeyInverter.tpp>
 #include <vector>
@@ -66,10 +66,10 @@ int main(){
     systemInput entrada;
 
     //Sistemas para las entidades
-    visualizeEntity<managerPacman> viewPacman;
-    displacementEntity<managerPacman> disPacman;
-    visualizeEntity<managerCollectible> viewCoins;
-    visualizeEntity<managerTablero> viewBoard;
+    systemVisualizeEntity<managerPacman> viewPacman;
+    systemDisplacementEntity<managerPacman> disPacman;
+    systemVisualizeEntity<managerCollectible> viewCoins;
+    systemVisualizeEntity<managerTablero> viewBoard;
 
     //Sistema de colision entre las entidades
     systemGenericCollition<managerPacman,managerTablero> colition;
@@ -80,6 +80,7 @@ int main(){
     //Creacion de los managers de las entidades
     managerPacman player;
     managerTablero board;
+    managerTablero coinboard;
     managerCollectible coins;
 
     //Creacion de las entidades como tal
@@ -87,16 +88,20 @@ int main(){
     auto board1 = board.addEntity();
     int coins1 = coins.addEntity();
 
+
+
+    Sprite coinlayout;
+    coinlayout.spriteInitializer(40,"coinlayout",'*');
+    std::vector<Pixel> temp = coinlayout.getSprite();
     std::vector<int> coinstash;
-    for(int i; i<20; i++){
 
+    int it=0;
+    for(auto pixel : temp){
         coinstash.push_back(coins.addEntity());
-        coins.spriteInitializer(coinstash.at(i),1,"coin");
-        coins.positionInitializer(coinstash.at(i),5+i,6);
+        coins.spriteInitializer(coinstash.at(it),1,"coin");
+        coins.positionInitializer(coinstash.at(it),pixel.getX()+1,pixel.getY()+1);
+        it++;
     }
-
-
-
 
 
 
@@ -112,7 +117,7 @@ int main(){
     coins.positionInitializer(coins1,5,6);
 
     //Empezar la terminal y generar game loop
-
+    terminal.terminalSetColor(gameterminal,5);
     terminal.terminalPersonalized(gameterminal,'=','I');
     terminal.terminalDefault(gameterminal);
     char Tecla = 0;
@@ -143,14 +148,14 @@ int main(){
         
         //Dibujamos
 
-        viewPacman.update(Pacman1,&player);
-        viewBoard.update(board1,&board);
+        viewPacman.viewColor(Pacman1,&player,14);
+        viewBoard.viewColor(board1,&board,15);
         
         for( auto moneda : coins.getEntities()){
-            viewCoins.update(moneda.first,&coins);
+            viewCoins.viewColor(moneda.first,&coins,10);
         }
         
-        Sleep(3);
+        //Sleep(10);
         
     }
 
