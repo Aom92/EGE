@@ -12,6 +12,7 @@
 #include <std/Windows/systemDisplacementEntity.tpp>
 #include <std/Windows/systemGenericCollition.tpp>
 #include <std/Windows/systemKeyInverter.tpp>
+#include <std/Windows/systemScore.hpp>
 #include <vector>
 
 
@@ -70,6 +71,7 @@ int main(){
     systemDisplacementEntity<managerPacman> disPacman;
     systemVisualizeEntity<managerCollectible> viewCoins;
     systemVisualizeEntity<managerTablero> viewBoard;
+    systemScore<managerTablero> scoreboard;
 
     //Sistema de colision entre las entidades
     systemGenericCollition<managerPacman,managerTablero> colition;
@@ -116,6 +118,9 @@ int main(){
     coins.spriteInitializer(coins1,1,"coin");
     coins.positionInitializer(coins1,5,6);
 
+    scoreboard.scoreInitializer(board1,&board);
+
+
     //Empezar la terminal y generar game loop
     terminal.terminalSetColor(gameterminal,5);
     terminal.terminalPersonalized(gameterminal,'=','I');
@@ -141,6 +146,7 @@ int main(){
 
             if(colition2.collitionId(Pacman1,&player,&coins,&id)){
                 coins.destroyEntity(id);
+                scoreboard.update(1,board1,&board);
             }
 
         }
