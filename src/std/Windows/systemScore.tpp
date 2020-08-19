@@ -26,7 +26,7 @@ namespace EGE::STD::TERMINAL::WINDOWS{
 
     template<typename mType>
     void systemScore<mType>::update(int points , EGE::CORE::EntityId id, mType *mBoard){
-        this -> points += points;
+        this -> points = points;
 
         if(this -> points > 9999){
             this ->  points = 9999;
