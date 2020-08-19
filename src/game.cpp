@@ -15,6 +15,9 @@
 #include <std/Windows/systemScore.tpp>
 #include <vector>
 
+#include <Windows.h>
+#include <fstream>
+#include <thread>
 
 using namespace EGE::STD::TERMINAL::WINDOWS;
 
@@ -52,10 +55,42 @@ class managerCollectible : public EGE::STD::TERMINAL::WINDOWS::mSprite<collectib
 };
 
 
+//Funciones Extras
+
+double PCfreq = 0.0;
+__int64 CounterStart = 0;
+
+/**
+ * @brief Empieza el Contador del Sistema
+ * @author @Aom92
+*/
+void StartCounter()
+{
+    LARGE_INTEGER li;
+    if(!QueryPerformanceFrequency(&li)){
+        std::cout << "QueryPerfomanceFrequency Fallo!" << std::endl;
+    }
+
+    PCfreq = double(li.QuadPart)/1000.0;
+    QueryPerformanceCounter(&li);
+    CounterStart = li.QuadPart;
+}
+
+/**
+ * @brief Retorna el tiempo en milisegundos que han pasado desde que StartCounter() fue llamado
+ * @author @Aom92
+*/
+double GetCounter(){
+    LARGE_INTEGER li;
+    QueryPerformanceCounter(&li);
+    return double(li.QuadPart - CounterStart)/ PCfreq;
+}
+
+
 
 
 int main(){
-    
+
     //Inicializar tablero de juego
     mTerminal terminal;
     //Definir dimensiones
@@ -127,44 +162,98 @@ int main(){
     terminal.terminalDefault(gameterminal);
     char Tecla = 0;
     int id;
+
+    //Inicio del Game Loop
+
+    int ups =30.0; int fps = 30.0;
+
+    StartCounter();
+    double TiempoInicial = GetCounter();
+    double timeU = 1000 / ups;
+    double timeF = 1000 / fps;
+
+    double deltaU = 0;
+    double deltaF = 0;
+
+    int frames = 0;
+    int ticks = 0;
+
+    double timer = GetCounter();
+
+
+//INICIALIZAMOS LOS SPRITES QUE SOLO SE DIBUJAN 1 VEZ
+    viewBoard.viewColor(board1,&board,15);
+
+    terminal.terminalSetColor(gameterminal,10);
+    for( auto moneda : coins.getEntities()){
+        viewCoins.view(moneda.first,&coins);
+    }
+
     while(Tecla != 'c'){
+        
+        double TiempoActual = GetCounter();
+
+        deltaU += (TiempoActual - TiempoInicial ) / timeU;
+        deltaF += (TiempoActual - TiempoInicial) / timeF;
+        TiempoInicial = TiempoActual;
 
         //Leer input
         Tecla = entrada.update();
 
-        // Mover al jugador
-        disPacman.update(Tecla,Pacman1,&player,ARROWS);
 
-        //Revisar colisiones
-        if(Tecla != 0){
+        if(deltaU >= 0.1){
+            Sleep(10);
+            
+            //Updates
+            // Mover al jugador
+            disPacman.update(Tecla,Pacman1,&player,ARROWS);
+            
+
             if(colition.collition(Pacman1,&player,&board)){
 
-                disPacman.update(inverter.update(Tecla,ARROWS),Pacman1,&player,ARROWS);
+                    disPacman.update(inverter.update(Tecla,ARROWS),Pacman1,&player,ARROWS);
+                    viewBoard.viewColor(board1,&board,15);
 
             }
 
+            viewPacman.viewColor(Pacman1,&player,14);
+        
+        
+        ticks++;
+        deltaU--;
 
-            if(colition2.collitionId(Pacman1,&player,&coins,&id)){
-                coins.destroyEntity(id);
-                scoreboard.update(1,board1,&board);
+        }
+
+        if(deltaF >= 0.1){
+
+            Sleep(7);
+            //Revisar colisiones
+
+            if(Tecla != 0){
+            
+                if(colition2.collitionId(Pacman1,&player,&coins,&id)){
+                    int tmp = id;
+                    
+                    coins.destroyEntity(id);
+                    viewPacman.viewColor(Pacman1,&player,14);
+                }
+
             }
-
+        frames++;
+        deltaF--;
         }
 
+        if(GetCounter() - timer > 1000){
+            
+            scoreboard.update(frames,board1,&board);
+            viewBoard.viewColor(board1,&board,15);
         
-        //Dibujamos
+            frames=0;
+            timer+= 1000;
+            
 
-        viewPacman.viewColor(Pacman1,&player,14);
-        viewBoard.viewColor(board1,&board,15);
-        
-        for( auto moneda : coins.getEntities()){
-            viewCoins.viewColor(moneda.first,&coins,10);
         }
-        
-        //Sleep(10);
-        
+                     
     }
-
-
 
 }
